@@ -1,0 +1,162 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+Read_file = pd.read_excel("E:\data science\Data for videos\Cleaning_Scraper.xlsx")
+print("---------")
+print(Read_file.shape) # Show The Number Of The Cols , Rows
+print("---------")
+print(Read_file.nunique())
+print("---------")
+# Convert 'Reviews_Nums' to numeric
+Read_file['Reviews_Nums'] = pd.to_numeric(Read_file['Reviews_Nums'], errors='coerce')
+
+
+# Drop rows with NaN values in 'Reviews_Nums' since they won't contribute to the top 10
+Read_file = Read_file.dropna(subset=['Reviews_Nums'])
+
+
+# Assuming 'Reviews_Nums' represents the criteria for the 'top 10'
+top_10_companies = Read_file.nlargest(10, 'Reviews_Nums')
+
+
+# Histogram for Reviews_Nums for the top 10 companies
+plt.figure(figsize=(10, 6))
+sns.histplot(top_10_companies['Reviews_Nums'], bins=20, kde=True)
+plt.title('Distribution of Reviews_Nums for Top 10 Companies')
+plt.xlabel('Reviews_Nums')
+plt.ylabel('Frequency')
+plt.show()
+
+
+# Scatter plot for Latitude_After and Longitude_After for the top 10 companies
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='Longitude_After', y='Latitude_After', data=top_10_companies, hue='Category', palette='viridis')
+plt.title('Scatter Plot of Latitude and Longitude for Top 10 Companies')
+plt.xlabel('Longitude_After')
+plt.ylabel('Latitude_After')
+plt.legend(title='Category', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Sort the DataFrame by count of 'Cleaning_Delivery' in descending order
+cleaning_delivery_counts = top_10_companies['Cleaning_Delivery'].value_counts().reset_index()
+cleaning_delivery_counts.columns = ['Cleaning_Delivery', 'Count']
+cleaning_delivery_counts_sorted = cleaning_delivery_counts.sort_values(by='Count', ascending=False)
+
+
+# Create the count plot
+plt.figure(figsize=(10, 6))
+count_plot = sns.countplot(x='Cleaning_Delivery', data=top_10_companies, order=cleaning_delivery_counts_sorted['Cleaning_Delivery'])
+plt.title('Count of Cleaning Delivery for Top 10 Companies')
+plt.xlabel('Cleaning Delivery')
+plt.ylabel('Count')
+# Add data labels to the bars
+for index, value in enumerate(cleaning_delivery_counts_sorted['Count']):
+    count_plot.text(index, value, f'{value}', ha='center', va='bottom', fontsize=10)
+plt.show()
+
+
+# Scatter Plot Of Review_nums & After Reviews_nums For Top 10 Companies
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='Reviews_Nums', y='After_Reviews_nums', data=top_10_companies, hue='Category', palette='viridis')
+plt.title('Scatter Plot of Reviews_Nums vs. After_Reviews_nums for Top 10 Companies')
+plt.xlabel('Reviews_Nums')
+plt.ylabel('After_Reviews_nums')
+plt.legend(title='Category', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Group by 'Category' and count occurrences of 'No Reviews' and 'Reviews' in 'After_Reviews_nums' for the top 10 companies
+review_counts_top_10 = top_10_companies.groupby(['Category', 'After_Reviews_nums']).size().unstack(fill_value=0)
+# Plotting the grouped bar plot for the top 10 companies
+review_counts_top_10.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.title('Number of "No Reviews" and "Reviews" by Category for Top 10 Companies')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.xticks(rotation=45)
+plt.legend(title='After_Reviews_nums', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Convert 'Review_points' to numeric, replacing non-numeric values with NaN
+top_10_companies['Review_points'] = pd.to_numeric(top_10_companies['Review_points'], errors='coerce')
+
+
+# Sort the DataFrame by 'Review_points' in descending order
+top_10_companies_sorted = top_10_companies.sort_values(by='Review_points', ascending=False)
+# Create the bar plot
+plt.figure(figsize=(12, 8))
+bar_plot = sns.barplot(x='Title', y='Review_points', data=top_10_companies_sorted, estimator=np.mean)
+plt.title('Average Review Points for Top 10 Companies')
+plt.xlabel('Company')
+plt.ylabel('Average Review Points')
+plt.xticks(rotation=45, ha='right')
+# Add data labels to the bars
+for index, value in enumerate(top_10_companies_sorted['Review_points']):
+    bar_plot.text(index, value, f'{value:.2f}', ha='center', va='bottom', fontsize=10)
+plt.show()
+
+
+# Box Plot of Review Points by Category for Top 10 Companies
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Category', y='Review_points', data=top_10_companies)
+plt.title('Box Plot of Review Points by Category for Top 10 Companies')
+plt.xlabel('Category')
+plt.ylabel('Review Points')
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+
+# Count of Cleaning Delivery Types by Company for Top 10 Companies
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Cleaning_Delivery', data=top_10_companies, hue='Title')
+plt.title('Count of Cleaning Delivery Types by Company for Top 10 Companies')
+plt.xlabel('Cleaning Delivery Type')
+plt.ylabel('Count')
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Company', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Geographical Locations of Top 10 Companies with Color-coded Review Points
+plt.figure(figsize=(10, 6))
+scatter_plot = sns.scatterplot(x='Longitude_After', y='Latitude_After', data=top_10_companies, hue='Review_points', palette='viridis', size='Review_points', sizes=(20, 200))
+scatter_plot.set_title('Geographical Locations of Top 10 Companies with Color-coded Review Points')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.legend(title='Review Points', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Count of Cleaning Delivery Types by Category for Top 10 Companies
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Cleaning_Delivery', data=top_10_companies, hue='Category')
+plt.title('Count of Cleaning Delivery Types by Category for Top 10 Companies')
+plt.xlabel('Cleaning Delivery Type')
+plt.ylabel('Count')
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Category', loc='upper right', bbox_to_anchor=(1.15, 1))
+plt.show()
+
+
+# Correlation Heatmap for Top 10 Companies
+plt.figure(figsize=(10, 6))
+sns.heatmap(top_10_companies.corr(), cmap='coolwarm', annot=True, fmt=".2f", vmin=-1, vmax=1)
+plt.title('Correlation Heatmap for Top 10 Companies')
+plt.show()
+
+
+# Show times Companyes open in days at weak
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+open_times = [901, 1016, 1035, 1077, 1112, 1034, 621]
+# Plotting the bar chart
+plt.bar(days, open_times, color='skyblue')
+plt.xlabel('Day of the Week')
+plt.ylabel('Open Time (in minutes)')
+plt.title('Times Companies Open In Days at Weak')
+plt.ylim(0, max(open_times) + 100)  # Adjust the y-axis limits if needed
+# Show the plot
+plt.show()
